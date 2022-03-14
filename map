@@ -1,0 +1,70 @@
+{
+  "levels": [
+    {
+      "recurse": [
+        {
+          "pattern": {
+            "code": {
+              "Char": "B"
+            },
+            "modifiers": {
+              "bits": 2
+            }
+          },
+          "result": [{
+            "code": {
+              "Char": "b"
+            },
+            "modifiers": {
+              "bits": 0
+            }
+          }, 
+          {
+            "code": {
+              "Char": "o"
+            },
+            "modifiers": {
+              "bits": 0
+            }
+          },
+          {
+            "code": {
+              "Char": "o"
+            },
+            "modifiers": {
+              "bits": 0
+            }
+          },
+          {
+            "code": {
+              "Char": "k"
+            },
+            "modifiers": {
+              "bits": 0
+            }
+          }],
+          "mode_req": "Any"
+        },
+        {
+          "pattern": {
+            "code": {
+              "Char": "q"
+            },
+            "modifiers": {
+              "bits": 4
+            }
+          },"result": [{
+            "code": {
+              "Char": "Q"
+            },
+            "modifiers": {
+              "bits": 2
+            }
+          }],
+          "mode_req": "Any"
+        }
+      ],
+      "fall": []
+    }
+  ]
+}

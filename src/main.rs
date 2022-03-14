@@ -3,11 +3,13 @@
 mod debug;
 #[allow(dead_code)]
 mod ansi;
+mod keymap;
 
-use std::{collections::{LinkedList}, fs::write, io::stdout, fmt::Display};
+use std::{collections::{LinkedList}, fs::{write, self}, io::stdout, fmt::Display};
 
 use crossterm::{Result, event::{Event, KeyCode, KeyEvent, KeyModifiers}, terminal::{self, disable_raw_mode, enable_raw_mode}};
 use grid_ui::{crossterm::CrosstermHandler, grid::{Alignment, DividerStrategy, Frame, SplitStrategy}, process::DrawProcess, trim::{TrimStrategy, TrimmedText}};
+use keymap::{KeyLevels, Mode};
 use unicode_segmentation::UnicodeSegmentation;
 
 
@@ -16,16 +18,37 @@ fn main() -> Result<()> {
     // discards the first arg (path to the program). 
     let _ = args.next();
     // if there is a next argument... 
+    let map: KeyLevels = serde_json::from_str(&fs::read_to_string("map").unwrap_or("{[]}".to_string())).expect("Invalid json scheme!");
     if let Some(val) = args.next() {
-        open(&val)?;
+        open(&val, map)?;
     } else {
         // error message
         println!("Usage: cargo run <path> or program <path>");
     }
     Ok(())
 }
+// fn map_test() {
+//     std::fs::write("map", serde_json::to_string_pretty(&keymap::KeyLevels {
+//         levels: vec![
+//             KeyLevel { recurse: vec![KeyMap { 
+//                 pattern: KeyEvent::new(KeyCode::Char('b'), KeyModifiers::CONTROL), result: Vec::new(), mode_req: keymap::ModeReq::Any 
+//             }], fall: vec![] }
+//         ]
+//     }).unwrap()).unwrap();
+// }
 pub const HEADER_SIZE:usize = 5;
-fn open(p: &str) -> std::io::Result<()>{
+pub struct State {
+    pub mode: Mode,
+    pub will_quit: bool,
+}
+impl State {
+    pub fn new() -> State {
+        State { mode: Mode::Command, will_quit: false }
+    }
+}
+fn open(p: &str, keymap: KeyLevels) -> std::io::Result<()> {
+    // initializes the state
+    let mut state = State::new();
     // gets the terminal's size
     let (x_max, y_max) = terminal::size()?;
     let mut f = Frame::new(0, 0, x_max as usize, y_max as usize);
@@ -45,12 +68,15 @@ fn open(p: &str) -> std::io::Result<()>{
     let mut d = grid.into_process(DividerStrategy::Beginning);
     // displays it for the first time. 
     text_box.display(&mut d, &mut headers);
-    while let Ok(val) = crossterm::event::read() {
+    'outer: while let Ok(val) = crossterm::event::read() {
         // If a key is pressed... 
         if let Event::Key(val) = val {
             // handle this key. 
-            if text_box.recv_key(val, &mut d, &mut headers) {
-                break;
+            for i in keymap.map_keys(val, state.mode) {
+                text_box.recv_key(i, &mut d, &mut headers, &mut state);
+                if state.will_quit {
+                    break 'outer;
+                }
             }
         // If the screen is resized... 
         } else if let Event::Resize(x, y) = val {
@@ -176,7 +202,7 @@ impl TextBox {
         }
     }
     // Handles the key press. 
-    pub fn recv_key(&mut self, k: KeyEvent, d: &mut DrawProcess, headers: &mut DrawProcess) -> bool {
+    pub fn recv_key(&mut self, k: KeyEvent, d: &mut DrawProcess, headers: &mut DrawProcess, state: &mut State) {
         let KeyEvent { code, modifiers } = k; 
         match code {
             // deletes the previous character if there is one. Merges two lines if needed. 
@@ -258,7 +284,7 @@ impl TextBox {
             // Either executes a control sequence or adds a key. 
             KeyCode::Char(c) => {
                 if modifiers.contains(KeyModifiers::CONTROL) {
-                    return self.ctrl_keys(c, modifiers);
+                    self.ctrl_keys(c, modifiers, state);
                 } else {
                     self.contents.get_y().insert(c);
                 }
@@ -270,25 +296,24 @@ impl TextBox {
             _ => {}
         }
         self.display(d, headers);
-        return false;
     }
     // Executes a control sequence, and returns true if the program should end. 
-    pub fn ctrl_keys(&mut self, c: char, _m: KeyModifiers) -> bool {
+    pub fn ctrl_keys(&mut self, c: char, _m: KeyModifiers, state: &mut State) {
         match c {
             // ctrl+c will copy text in the future
-            'c' => {
+            'c' | 'C' => {
 
             },
             // If ctrl+q is pressed, the program should end.  
-            'q' => {
-                return true;
+            'q' | 'Q' => {
+                state.will_quit = true;
             },
             // ctrl+v will paste text in the future
-            'v' => {},
+            'v' | 'V' => {},
             // ctrl+x will cut text in the future
-            'x' => {},
+            'x' | 'X' => {},
             // ctrl+s saves the file
-            's' => {
+            's' | 'S' => {
                 if let Err(_) = write(
                     &self.path, self.contents.iter() // iterates through the lines
                     .map(|x| x.iter().collect::<String>()) // collects each line into a string
@@ -300,8 +325,6 @@ impl TextBox {
             }
             _ => {}
         }
-        // the program should not end. 
-        false
     }
     // Calculates the position where the display starts printing. 
     pub fn calculate_start(&mut self, height: usize) -> usize {
