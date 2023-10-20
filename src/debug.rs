@@ -1,5 +1,4 @@
-use std::fs::{read_to_string, self};
-
+use std::fs::{self, read_to_string};
 
 pub fn debug(s: &str) {
     let mut v = read_to_string("debug").unwrap();

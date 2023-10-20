@@ -1,0 +1,17 @@
+1) Update main to use the data structure provided
+2) Update textbox to include more buffers - visible and invisible buffers. 
+
+BUFFER STRUCTURE: There will be a map of buffers. There will be up to the 16-bit limit in buffers (65536)
+
+    There will be 4 kinds of buffers: 
+
+    Buffers ending in 00 are to be used for files and UI elements. 
+
+    Buffers ending in 10 are to be used for copy and paste. 
+
+    Buffers ending in 01 are to be used for command buffers. 
+
+    Buffers ending in 10 are miscellaneous. 
+3) Add support for extensions. 
+4) Create navigation bar. 
+5) Overhaul screen - give support for multiple buffers and a display mode. 

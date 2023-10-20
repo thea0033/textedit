@@ -1,13 +1,11 @@
-use serde::{Serialize, Deserialize};
-use crossterm::event::{KeyEvent};
+use crossterm::event::KeyEvent;
+use serde::{Deserialize, Serialize};
 
-use crate::debug;
 #[derive(Serialize, Deserialize)]
 pub struct KeyLevels {
     pub levels: Vec<KeyLevel>,
 }
 impl KeyLevels {
-
     pub fn map_keys(&self, event: KeyEvent, current_mode: Mode) -> Vec<KeyEvent> {
         let mut queue = Vec::new();
         queue.push(event);
@@ -15,7 +13,7 @@ impl KeyLevels {
         for level in &self.levels {
             // a loop because of the recursion portion of the level
             loop {
-                // if the flag is still equal to false, the loop will end.  
+                // if the flag is still equal to false, the loop will end.
                 let mut flag = false;
                 // moves the queue over to a new vector
                 let new_queue = std::mem::replace(&mut queue, Vec::new());
@@ -33,12 +31,12 @@ impl KeyLevels {
                             break;
                         }
                     }
-                    // If there hasn't been a replacement, add the item, unaltered. 
+                    // If there hasn't been a replacement, add the item, unaltered.
                     if !replaced {
                         queue.push(item);
                     }
                 }
-                // if it's left unaltered, break. 
+                // if it's left unaltered, break.
                 if !flag {
                     break;
                 }
@@ -54,10 +52,10 @@ impl KeyLevels {
                         queue.append(&mut line.result.clone());
                         replaced = true;
                         break;
-                    } 
+                    }
                 }
                 if !replaced {
-                    // if there's no replacement, pushes the item on, unaltered. 
+                    // if there's no replacement, pushes the item on, unaltered.
                     queue.push(item);
                 }
             }
@@ -84,12 +82,14 @@ pub enum ModeReq {
     Command = 2,
 }
 impl ModeReq {
-    pub fn matches(&self, mode: Mode) -> bool { 
+    pub fn matches(&self, mode: Mode) -> bool {
         (*self as u8) == 0 || (*self as u8) == (mode as u8)
     }
 }
 #[derive(Clone, Copy)]
 pub enum Mode {
     Insert = 1,
-    Command = 2
+    Command = 2,
 }
+
+

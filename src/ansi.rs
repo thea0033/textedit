@@ -29,5 +29,5 @@ pub const BACKGROUND_BLUE: &str = "\u{001B}[44m";
 pub const BACKGROUND_MAGENTA: &str = "\u{001B}[45m";
 pub const BACKGROUND_CYAN: &str = "\u{001B}[46m";
 pub const BACKGROUND_WHITE: &str = "\u{001B}[47m";
-
-pub const SELECTED: &str = "\u{001b}[48;5;235m";
+pub const SELECTED_LINE: &str = "\u{001b}[48;5;235m";
+pub const SELECTED: &str = "\u{001b}[48;5;239m";
