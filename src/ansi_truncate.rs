@@ -21,9 +21,6 @@ impl AnsiTruncate {
             extra_length: 0,
         }
     }
-    pub fn add_length(&mut self, length: usize) {
-        self.extra_length += length;
-    }
 }
 impl Display for AnsiTruncate {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

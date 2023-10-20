@@ -6,10 +6,7 @@ mod debug;
 mod keymap;
 mod textbox;
 
-use std::{
-    collections::LinkedList,
-    fs::{self},
-};
+use std::fs;
 use crossterm::{
     event::Event,
     terminal::{self, disable_raw_mode, enable_raw_mode},
